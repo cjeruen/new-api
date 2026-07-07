@@ -500,6 +500,23 @@ func validateChannel(channel *model.Channel, isAdd bool) error {
 		}
 	}
 
+	// xAI credential JSON validation (optional, only when JSON object is provided)
+	if channel.Type == constant.ChannelTypeXai {
+		trimmedKey := strings.TrimSpace(channel.Key)
+		if trimmedKey != "" && strings.HasPrefix(trimmedKey, "{") {
+			var keyMap map[string]any
+			if err := common.Unmarshal([]byte(trimmedKey), &keyMap); err != nil {
+				return fmt.Errorf("xAI credential key must be a valid JSON object")
+			}
+			if v, ok := keyMap["access_token"]; !ok || v == nil || strings.TrimSpace(fmt.Sprintf("%v", v)) == "" {
+				return fmt.Errorf("xAI credential JSON must include access_token")
+			}
+			if v, ok := keyMap["refresh_token"]; !ok || v == nil || strings.TrimSpace(fmt.Sprintf("%v", v)) == "" {
+				return fmt.Errorf("xAI credential JSON must include refresh_token")
+			}
+		}
+	}
+
 	// Codex OAuth key validation (optional, only when JSON object is provided)
 	if channel.Type == constant.ChannelTypeCodex {
 		trimmedKey := strings.TrimSpace(channel.Key)

@@ -2761,6 +2761,33 @@ export function ChannelMutateDrawer({
                                 />
                               )}
 
+                              {currentType === 48 && (
+                                <Alert className='border-sky-200 bg-sky-50 text-sky-950 dark:border-sky-500/40 dark:bg-sky-500/10 dark:text-sky-50'>
+                                  <AlertCircle className='h-4 w-4' />
+                                  <AlertDescription className='space-y-2'>
+                                    <p className='font-medium'>
+                                      {t('xAI channel key formats')}
+                                    </p>
+                                    <ul className='list-disc space-y-1 pl-4 text-sm'>
+                                      <li>{t('xAI channel key format api key')}</li>
+                                      <li>{t('xAI channel key format json')}</li>
+                                    </ul>
+                                    <div className='space-y-1'>
+                                      <p className='text-xs font-medium'>
+                                        {t('xAI channel key json example')}
+                                      </p>
+                                      <pre className='bg-background/80 overflow-x-auto rounded-md border p-2 font-mono text-xs'>
+                                        {`{
+  "type": "xai",
+  "access_token": "eyJ...",
+  "refresh_token": "eyJ..."
+}`}
+                                      </pre>
+                                    </div>
+                                  </AlertDescription>
+                                </Alert>
+                              )}
+
                               <FormField
                                 control={form.control}
                                 name='key'
