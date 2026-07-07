@@ -572,6 +572,41 @@ func RefreshCodexChannelCredential(c *gin.Context) {
 	})
 }
 
+func RefreshXaiChannelCredential(c *gin.Context) {
+	channelId, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.ApiError(c, fmt.Errorf("invalid channel id: %w", err))
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	defer cancel()
+
+	oauthKey, ch, err := service.RefreshXaiChannelCredential(ctx, channelId, service.XaiCredentialRefreshOptions{ResetCaches: true})
+	if err != nil {
+		common.SysError("failed to refresh xai channel credential: " + err.Error())
+		message := strings.TrimSpace(err.Error())
+		if message == "" {
+			message = "刷新凭证失败，请稍后重试"
+		}
+		c.JSON(http.StatusOK, gin.H{"success": false, "message": message})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "refreshed",
+		"data": gin.H{
+			"expires_at":   oauthKey.Expired,
+			"last_refresh": oauthKey.LastRefresh,
+			"email":        oauthKey.Email,
+			"channel_id":   ch.Id,
+			"channel_type": ch.Type,
+			"channel_name": ch.Name,
+		},
+	})
+}
+
 type AddChannelRequest struct {
 	Mode                      string                `json:"mode"`
 	MultiKeyMode              constant.MultiKeyMode `json:"multi_key_mode"`

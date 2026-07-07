@@ -10,6 +10,7 @@ import (
 	"github.com/QuantumNous/new-api/relay/channel"
 	"github.com/QuantumNous/new-api/relay/channel/openai"
 	relaycommon "github.com/QuantumNous/new-api/relay/common"
+	"github.com/QuantumNous/new-api/service"
 	"github.com/QuantumNous/new-api/types"
 
 	"github.com/QuantumNous/new-api/relay/constant"
@@ -56,7 +57,21 @@ func (a *Adaptor) GetRequestURL(info *relaycommon.RelayInfo) (string, error) {
 
 func (a *Adaptor) SetupRequestHeader(c *gin.Context, req *http.Header, info *relaycommon.RelayInfo) error {
 	channel.SetupApiRequestHeader(info, c, req)
-	req.Set("Authorization", "Bearer "+ResolveAccessToken(info.ApiKey))
+
+	apiKey := strings.TrimSpace(info.ApiKey)
+	if strings.HasPrefix(apiKey, "{") && info.ChannelId > 0 {
+		if refreshed, newKey, err := service.RefreshXaiChannelKeyIfNeeded(
+			c.Request.Context(),
+			info.ChannelId,
+			apiKey,
+			info.ChannelSetting.Proxy,
+		); err == nil && refreshed {
+			apiKey = newKey
+			info.ApiKey = newKey
+		}
+	}
+
+	req.Set("Authorization", "Bearer "+ResolveAccessToken(apiKey))
 	return nil
 }
 

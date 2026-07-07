@@ -321,6 +321,17 @@ export async function refreshCodexCredential(
   return res.data
 }
 
+export async function refreshXaiCredential(
+  channelId: number
+): Promise<CodexCredentialRefreshResponse> {
+  const res = await api.post(
+    `/api/channel/${channelId}/xai/refresh`,
+    {},
+    channelActionConfig()
+  )
+  return res.data
+}
+
 export async function getCodexUsage(
   channelId: number
 ): Promise<CodexUsageResponse> {

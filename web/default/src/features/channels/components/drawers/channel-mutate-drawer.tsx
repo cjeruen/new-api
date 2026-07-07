@@ -128,6 +128,7 @@ import {
   getGroups,
   getPrefillGroups,
   refreshCodexCredential,
+  refreshXaiCredential,
 } from '../../api'
 import {
   ADD_MODE_OPTIONS,
@@ -598,6 +599,8 @@ export function ChannelMutateDrawer({
   const [channelKey, setChannelKey] = useState<string | null>(null)
   const [isChannelKeyLoading, setIsChannelKeyLoading] = useState(false)
   const [isCodexCredentialRefreshing, setIsCodexCredentialRefreshing] =
+    useState(false)
+  const [isXaiCredentialRefreshing, setIsXaiCredentialRefreshing] =
     useState(false)
   const initialModelsRef = useRef<string[]>([])
   const initialModelMappingRef = useRef<string>('')
@@ -1311,6 +1314,25 @@ export function ChannelMutateDrawer({
       toast.error(error instanceof Error ? error.message : t('Refresh failed'))
     } finally {
       setIsCodexCredentialRefreshing(false)
+    }
+  }, [channelId, queryClient, t])
+
+  const handleRefreshXaiCredential = useCallback(async () => {
+    if (!channelId) return
+    setIsXaiCredentialRefreshing(true)
+    try {
+      const res = await refreshXaiCredential(channelId)
+      if (!res.success) {
+        throw new Error(res.message || t('Failed to refresh credential'))
+      }
+      toast.success(t('Credential refreshed'))
+      queryClient.invalidateQueries({
+        queryKey: channelsQueryKeys.detail(channelId),
+      })
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t('Refresh failed'))
+    } finally {
+      setIsXaiCredentialRefreshing(false)
     }
   }, [channelId, queryClient, t])
 
@@ -2762,30 +2784,55 @@ export function ChannelMutateDrawer({
                               )}
 
                               {currentType === 48 && (
-                                <Alert className='border-sky-200 bg-sky-50 text-sky-950 dark:border-sky-500/40 dark:bg-sky-500/10 dark:text-sky-50'>
-                                  <AlertCircle className='h-4 w-4' />
-                                  <AlertDescription className='space-y-2'>
-                                    <p className='font-medium'>
-                                      {t('xAI channel key formats')}
-                                    </p>
-                                    <ul className='list-disc space-y-1 pl-4 text-sm'>
-                                      <li>{t('xAI channel key format api key')}</li>
-                                      <li>{t('xAI channel key format json')}</li>
-                                    </ul>
-                                    <div className='space-y-1'>
-                                      <p className='text-xs font-medium'>
-                                        {t('xAI channel key json example')}
+                                <>
+                                  {isEditing && channelId && (
+                                    <div className='flex justify-end'>
+                                      <Button
+                                        type='button'
+                                        variant='outline'
+                                        size='sm'
+                                        onClick={handleRefreshXaiCredential}
+                                        disabled={
+                                          sensitiveLocked ||
+                                          isXaiCredentialRefreshing
+                                        }
+                                      >
+                                        {isXaiCredentialRefreshing ? (
+                                          <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                                        ) : (
+                                          <RefreshCw className='mr-2 h-4 w-4' />
+                                        )}
+                                        {isXaiCredentialRefreshing
+                                          ? t('Refreshing...')
+                                          : t('Refresh credential')}
+                                      </Button>
+                                    </div>
+                                  )}
+                                  <Alert className='border-sky-200 bg-sky-50 text-sky-950 dark:border-sky-500/40 dark:bg-sky-500/10 dark:text-sky-50'>
+                                    <AlertCircle className='h-4 w-4' />
+                                    <AlertDescription className='space-y-2'>
+                                      <p className='font-medium'>
+                                        {t('xAI channel key formats')}
                                       </p>
-                                      <pre className='bg-background/80 overflow-x-auto rounded-md border p-2 font-mono text-xs'>
-                                        {`{
+                                      <ul className='list-disc space-y-1 pl-4 text-sm'>
+                                        <li>{t('xAI channel key format api key')}</li>
+                                        <li>{t('xAI channel key format json')}</li>
+                                      </ul>
+                                      <div className='space-y-1'>
+                                        <p className='text-xs font-medium'>
+                                          {t('xAI channel key json example')}
+                                        </p>
+                                        <pre className='bg-background/80 overflow-x-auto rounded-md border p-2 font-mono text-xs'>
+                                          {`{
   "type": "xai",
   "access_token": "eyJ...",
   "refresh_token": "eyJ..."
 }`}
-                                      </pre>
-                                    </div>
-                                  </AlertDescription>
-                                </Alert>
+                                        </pre>
+                                      </div>
+                                    </AlertDescription>
+                                  </Alert>
+                                </>
                               )}
 
                               <FormField
