@@ -1,6 +1,7 @@
 package common
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/QuantumNous/new-api/common"
@@ -28,4 +29,26 @@ func NewOutboundJSONBody(data []byte) (body io.Reader, size int64, closer io.Clo
 		return nil, 0, nil, err
 	}
 	return common.ReaderOnly(storage), storage.Size(), storage, nil
+}
+
+// PreparePassthroughRequestBody builds the upstream body for pass-through mode.
+// When the channel has param override configured, transforms are applied to the
+// raw request JSON before forwarding.
+func PreparePassthroughRequestBody(storage common.BodyStorage, info *RelayInfo) (body io.Reader, size int64, closer io.Closer, err error) {
+	if storage == nil {
+		return nil, 0, nil, fmt.Errorf("body storage is nil")
+	}
+	if !HasParamOverride(info) {
+		return common.ReaderOnly(storage), storage.Size(), nil, nil
+	}
+
+	jsonData, err := storage.Bytes()
+	if err != nil {
+		return nil, 0, nil, err
+	}
+	jsonData, err = ApplyParamOverrideWithRelayInfo(jsonData, info)
+	if err != nil {
+		return nil, 0, nil, err
+	}
+	return NewOutboundJSONBody(jsonData)
 }

@@ -3,6 +3,7 @@ package common
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"reflect"
 	"testing"
 
@@ -244,6 +245,69 @@ func TestApplyParamOverrideDelete(t *testing.T) {
 	if _, exists := got["temperature"]; exists {
 		t.Fatalf("expected temperature to be deleted")
 	}
+}
+
+func TestApplyParamOverrideDeleteGrokPlaygroundPenalties(t *testing.T) {
+	input := []byte(`{"model":"grok-4.3","messages":[{"role":"user","content":"hi"}],"presence_penalty":0,"frequency_penalty":0,"stream":true}`)
+	override := map[string]interface{}{
+		"operations": []interface{}{
+			map[string]interface{}{"path": "presence_penalty", "mode": "delete"},
+			map[string]interface{}{"path": "frequency_penalty", "mode": "delete"},
+		},
+	}
+
+	out, err := ApplyParamOverride(input, override, nil)
+	if err != nil {
+		t.Fatalf("ApplyParamOverride returned error: %v", err)
+	}
+	assertJSONEqual(t, `{"model":"grok-4.3","messages":[{"role":"user","content":"hi"}],"stream":true}`, string(out))
+}
+
+func TestHasParamOverride(t *testing.T) {
+	if HasParamOverride(nil) {
+		t.Fatalf("expected false for nil relay info")
+	}
+	if HasParamOverride(&RelayInfo{ChannelMeta: &ChannelMeta{ParamOverride: nil}}) {
+		t.Fatalf("expected false for empty override map")
+	}
+	if !HasParamOverride(&RelayInfo{ChannelMeta: &ChannelMeta{ParamOverride: map[string]interface{}{
+		"operations": []interface{}{},
+	}}}) {
+		t.Fatalf("expected true when operations key exists")
+	}
+}
+
+func TestPreparePassthroughRequestBodyAppliesParamOverride(t *testing.T) {
+	storage, err := common2.CreateBodyStorage([]byte(`{"model":"grok-4.3","presence_penalty":0,"frequency_penalty":0}`))
+	if err != nil {
+		t.Fatalf("CreateBodyStorage returned error: %v", err)
+	}
+	defer storage.Close()
+
+	info := &RelayInfo{ChannelMeta: &ChannelMeta{ParamOverride: map[string]interface{}{
+		"operations": []interface{}{
+			map[string]interface{}{"path": "presence_penalty", "mode": "delete"},
+			map[string]interface{}{"path": "frequency_penalty", "mode": "delete"},
+		},
+	}}}
+
+	body, size, closer, err := PreparePassthroughRequestBody(storage, info)
+	if err != nil {
+		t.Fatalf("PreparePassthroughRequestBody returned error: %v", err)
+	}
+	if closer == nil {
+		t.Fatalf("expected closer when param override is applied")
+	}
+	defer closer.Close()
+	if size <= 0 {
+		t.Fatalf("expected positive body size, got %d", size)
+	}
+
+	payload, err := io.ReadAll(body)
+	if err != nil {
+		t.Fatalf("ReadAll returned error: %v", err)
+	}
+	assertJSONEqual(t, `{"model":"grok-4.3"}`, string(payload))
 }
 
 func TestApplyParamOverrideDeleteWildcardPath(t *testing.T) {

@@ -161,6 +161,10 @@ func ApplyParamOverride(jsonData []byte, paramOverride map[string]interface{}, c
 	return applyOperationsLegacy(jsonData, paramOverride, auditRecorder)
 }
 
+func HasParamOverride(info *RelayInfo) bool {
+	return len(getParamOverrideMap(info)) > 0
+}
+
 func buildLegacyParamOverride(paramOverride map[string]interface{}) map[string]interface{} {
 	if len(paramOverride) == 0 {
 		return nil
