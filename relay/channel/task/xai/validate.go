@@ -14,9 +14,9 @@ import (
 )
 
 func (a *TaskAdaptor) ValidateRequestAndSetAction(c *gin.Context, info *relaycommon.RelayInfo) *dto.TaskError {
-	if !isXAIVideoGenerationsRequest(c) {
+	if !isXAIVideoNativePostRequest(c) {
 		return relaycommon.CreateTaskError(
-			fmt.Errorf("xAI video only supports POST %s", NativeVideoGenerationsPath),
+			fmt.Errorf("xAI video only supports POST %s, %s, or %s", NativeVideoGenerationsPath, NativeVideoEditsPath, NativeVideoExtensionsPath),
 			"invalid_request",
 			http.StatusBadRequest,
 			true,
@@ -54,6 +54,11 @@ func validateXAIVideoRequest(c *gin.Context, info *relaycommon.RelayInfo) *dto.T
 	}
 	if err := validateNativeVideoConstraints(body); err != nil {
 		return relaycommon.CreateTaskError(err, "invalid_request", http.StatusBadRequest, true)
+	}
+	if path := nativeVideoPostPath(c); path == NativeVideoEditsPath || path == NativeVideoExtensionsPath {
+		if err := validateNativeVideoSourceVideo(body); err != nil {
+			return relaycommon.CreateTaskError(err, "invalid_request", http.StatusBadRequest, true)
+		}
 	}
 
 	req := relaycommon.TaskSubmitReq{
@@ -94,6 +99,18 @@ func validateXAIVideoDuration(duration int) *dto.TaskError {
 	return nil
 }
 
-func isXAIVideoGenerationsRequest(c *gin.Context) bool {
-	return c.Request != nil && c.Request.URL.Path == NativeVideoGenerationsPath
+func nativeVideoPostPath(c *gin.Context) string {
+	if c == nil || c.Request == nil || c.Request.URL == nil {
+		return ""
+	}
+	return c.Request.URL.Path
+}
+
+func isXAIVideoNativePostRequest(c *gin.Context) bool {
+	switch nativeVideoPostPath(c) {
+	case NativeVideoGenerationsPath, NativeVideoEditsPath, NativeVideoExtensionsPath:
+		return true
+	default:
+		return false
+	}
 }

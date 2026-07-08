@@ -16,6 +16,15 @@ func TestNativeVideoInputImageURL(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestValidateNativeVideoSourceVideo(t *testing.T) {
+	err := validateNativeVideoSourceVideo([]byte(`{"video":{"url":"https://example.com/video.mp4"}}`))
+	require.NoError(t, err)
+
+	err = validateNativeVideoSourceVideo([]byte(`{"model":"grok-imagine-video","prompt":"edit"}`))
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "video is required")
+}
+
 func TestValidateNativeVideoConstraints(t *testing.T) {
 	err := validateNativeVideoConstraints([]byte(`{
 		"image": {"url": "https://example.com/a.png"},

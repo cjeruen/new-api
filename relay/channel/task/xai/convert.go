@@ -57,6 +57,25 @@ func collectVideoReferenceImages(rawJSON []byte) []string {
 	return out
 }
 
+func validateNativeVideoSourceVideo(body []byte) error {
+	video := gjson.GetBytes(body, "video")
+	if !video.Exists() {
+		return fmt.Errorf("video is required")
+	}
+	if video.Type == gjson.String {
+		return fmt.Errorf("video must be an object with a url or file_id field")
+	}
+	url := strings.TrimSpace(video.Get("url").String())
+	fileID := strings.TrimSpace(video.Get("file_id").String())
+	if url == "" && fileID == "" {
+		return fmt.Errorf("video must provide exactly one of url or file_id")
+	}
+	if url != "" && fileID != "" {
+		return fmt.Errorf("video must provide exactly one of url or file_id")
+	}
+	return nil
+}
+
 func validateNativeVideoConstraints(body []byte) error {
 	imageURL, err := nativeVideoInputImageURL(body)
 	if err != nil {

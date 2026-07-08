@@ -74,14 +74,34 @@ func TestValidateRequestRejectsNonNativePath(t *testing.T) {
 	require.Equal(t, "invalid_request", taskErr.Code)
 }
 
-func TestIsXAIVideoGenerationsRequest(t *testing.T) {
+func TestIsXAIVideoNativePostRequest(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	request := httptest.NewRequest(http.MethodPost, NativeVideoGenerationsPath, nil)
 	context, _ := gin.CreateTestContext(httptest.NewRecorder())
-	context.Request = request
-	require.True(t, isXAIVideoGenerationsRequest(context))
 
-	request = httptest.NewRequest(http.MethodPost, "/v1/videos", nil)
+	for _, path := range []string{NativeVideoGenerationsPath, NativeVideoEditsPath, NativeVideoExtensionsPath} {
+		context.Request = httptest.NewRequest(http.MethodPost, path, nil)
+		require.True(t, isXAIVideoNativePostRequest(context), "path %s should be native", path)
+	}
+
+	context.Request = httptest.NewRequest(http.MethodPost, "/v1/videos", nil)
+	require.False(t, isXAIVideoNativePostRequest(context))
+}
+
+func TestValidateXAIVideoRequestRejectsEditsWithoutVideo(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	body := strings.NewReader(`{
+		"model": "grok-imagine-video",
+		"prompt": "Add a silver necklace"
+	}`)
+	request := httptest.NewRequest(http.MethodPost, NativeVideoEditsPath, body)
+	request.Header.Set("Content-Type", "application/json")
+	recorder := httptest.NewRecorder()
+	context, _ := gin.CreateTestContext(recorder)
 	context.Request = request
-	require.False(t, isXAIVideoGenerationsRequest(context))
+	info := &relaycommon.RelayInfo{TaskRelayInfo: &relaycommon.TaskRelayInfo{}}
+
+	taskErr := validateXAIVideoRequest(context, info)
+	require.NotNil(t, taskErr)
+	require.Equal(t, "invalid_request", taskErr.Code)
+	require.Contains(t, taskErr.Message, "video is required")
 }

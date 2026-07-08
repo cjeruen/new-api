@@ -97,8 +97,20 @@ func (a *TaskAdaptor) EstimateBilling(c *gin.Context, _ *relaycommon.RelayInfo) 
 	return map[string]float64{"seconds": float64(duration)}
 }
 
-func (a *TaskAdaptor) BuildRequestURL(_ *relaycommon.RelayInfo) (string, error) {
-	return fmt.Sprintf("%s%s", a.baseURL, VideoGenerationsEndpoint), nil
+func (a *TaskAdaptor) BuildRequestURL(info *relaycommon.RelayInfo) (string, error) {
+	endpoint := VideoGenerationsEndpoint
+	if info != nil {
+		path := strings.Split(info.RequestURLPath, "?")[0]
+		switch path {
+		case NativeVideoEditsPath:
+			endpoint = VideoEditsEndpoint
+		case NativeVideoExtensionsPath:
+			endpoint = VideoExtensionsEndpoint
+		case NativeVideoGenerationsPath:
+			endpoint = VideoGenerationsEndpoint
+		}
+	}
+	return fmt.Sprintf("%s%s", a.baseURL, endpoint), nil
 }
 
 func (a *TaskAdaptor) BuildRequestHeader(c *gin.Context, req *http.Request, info *relaycommon.RelayInfo) error {
