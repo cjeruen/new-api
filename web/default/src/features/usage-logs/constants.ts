@@ -209,6 +209,17 @@ export const TASK_PLATFORMS = {
   RUNWAY: 'runway',
   LUMA: 'luma',
   VIGGLE: 'viggle',
+  // Channel type IDs (strconv.Itoa(channelType)) used by video task adaptors
+  SUNO_API: '36',
+  ALI: '17',
+  GEMINI: '24',
+  VERTEX: '41',
+  XAI: '48',
+  KLING_CH: '50',
+  JIMENG: '51',
+  VIDU: '52',
+  DOUBAO_VIDEO: '54',
+  SORA: '55',
 } as const
 
 // ============================================================================
@@ -286,19 +297,19 @@ export const MJ_SUBMIT_RESULT_MAPPINGS: Record<string, StatusMapping> = {
 export const TASK_ACTION_MAPPINGS: Record<string, StatusMapping> = {
   [TASK_ACTIONS.MUSIC]: { label: 'Generate Music', variant: 'neutral' },
   [TASK_ACTIONS.LYRICS]: { label: 'Generate Lyrics', variant: 'pink' },
-  [TASK_ACTIONS.GENERATE]: { label: 'Image to Video', variant: 'blue' },
-  [TASK_ACTIONS.TEXT_GENERATE]: { label: 'Text to Video', variant: 'blue' },
+  [TASK_ACTIONS.GENERATE]: { label: 'Image to Video', variant: 'orange' },
+  [TASK_ACTIONS.TEXT_GENERATE]: { label: 'Text to Video', variant: 'violet' },
   [TASK_ACTIONS.FIRST_TAIL_GENERATE]: {
     label: 'First/Last Frame to Video',
-    variant: 'blue',
+    variant: 'teal',
   },
   [TASK_ACTIONS.REFERENCE_GENERATE]: {
     label: 'Reference Video',
-    variant: 'blue',
+    variant: 'purple',
   },
   [TASK_ACTIONS.REMIX_GENERATE]: {
     label: 'Video Remix',
-    variant: 'blue',
+    variant: 'cyan',
   },
 }
 
@@ -319,11 +330,21 @@ export const TASK_STATUS_MAPPINGS: Record<string, StatusMapping> = {
  * Task platform mappings
  */
 export const TASK_PLATFORM_MAPPINGS: Record<string, StatusMapping> = {
-  [TASK_PLATFORMS.SUNO]: { label: 'suno', variant: 'green' },
-  [TASK_PLATFORMS.KLING]: { label: 'kling', variant: 'blue' },
-  [TASK_PLATFORMS.RUNWAY]: { label: 'runway', variant: 'violet' },
-  [TASK_PLATFORMS.LUMA]: { label: 'luma', variant: 'orange' },
-  [TASK_PLATFORMS.VIGGLE]: { label: 'viggle', variant: 'pink' },
+  [TASK_PLATFORMS.SUNO]: { label: 'Suno', variant: 'green' },
+  [TASK_PLATFORMS.KLING]: { label: 'Kling', variant: 'blue' },
+  [TASK_PLATFORMS.RUNWAY]: { label: 'Runway', variant: 'violet' },
+  [TASK_PLATFORMS.LUMA]: { label: 'Luma', variant: 'orange' },
+  [TASK_PLATFORMS.VIGGLE]: { label: 'Viggle', variant: 'pink' },
+  [TASK_PLATFORMS.SUNO_API]: { label: 'Suno', variant: 'green' },
+  [TASK_PLATFORMS.ALI]: { label: 'Ali', variant: 'orange' },
+  [TASK_PLATFORMS.GEMINI]: { label: 'Gemini', variant: 'blue' },
+  [TASK_PLATFORMS.VERTEX]: { label: 'Vertex AI', variant: 'blue' },
+  [TASK_PLATFORMS.XAI]: { label: 'xAI', variant: 'blue' },
+  [TASK_PLATFORMS.KLING_CH]: { label: 'Kling', variant: 'green' },
+  [TASK_PLATFORMS.JIMENG]: { label: 'Jimeng', variant: 'violet' },
+  [TASK_PLATFORMS.VIDU]: { label: 'Vidu', variant: 'pink' },
+  [TASK_PLATFORMS.DOUBAO_VIDEO]: { label: 'Doubao Video', variant: 'orange' },
+  [TASK_PLATFORMS.SORA]: { label: 'Sora', variant: 'green' },
 }
 
 // ============================================================================
