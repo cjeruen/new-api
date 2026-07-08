@@ -1,3 +1,14 @@
+/* Anchor jumps scroll the document (html), not .aijiniu-theme — smooth must live here. */
+html:has(.aijiniu-theme) {
+    scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html:has(.aijiniu-theme) {
+        scroll-behavior: auto;
+    }
+}
+
 /* Top-level keyframes: nested @keyframes inside .aijiniu-theme are stripped by the CSS bundler */
 @keyframes floaty {
     0%,
@@ -179,10 +190,6 @@
         }
 
         & {
-            scroll-behavior: smooth;
-        }
-
-        & {
             font-family: var(--font-body);
             background: var(--bg);
             color: var(--ink);
@@ -190,6 +197,13 @@
             -webkit-font-smoothing: antialiased;
             line-height: 1.65;
             letter-spacing: 0.005em;
+        }
+
+        /* Sticky nav ~68–80px; keep hash targets clear of the bar */
+        #advantage,
+        #industry,
+        #onboarding {
+            scroll-margin-top: 88px;
         }
 
         a {

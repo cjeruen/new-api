@@ -16,11 +16,76 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, type MouseEvent } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useAuthStore } from '@/stores/auth-store'
 import { api } from '@/lib/api'
 import { useAijiniuTranslation } from './locales'
+
+/** Smooth-scroll to an in-page section; returns false if the target is missing. */
+export function scrollToAijiniuSection(
+  id: string,
+  options?: { updateHash?: boolean }
+): boolean {
+  const el = document.getElementById(id)
+  if (!el) return false
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  
+  // Calculate dynamic header offset to prevent sticky nav overlap
+  const nav = document.querySelector('.nav')
+  const navHeight = nav ? nav.getBoundingClientRect().height : 70
+  const rect = el.getBoundingClientRect()
+  const scrollTop = window.scrollY ?? window.pageYOffset ?? document.documentElement.scrollTop
+  const targetY = rect.top + scrollTop - navHeight - 16 // 16px extra breathing space
+
+  window.scrollTo({
+    top: targetY,
+    behavior: reduceMotion ? 'auto' : 'smooth',
+  })
+
+  if (options?.updateHash !== false) {
+    const next = `#${id}`
+    if (window.location.hash !== next) {
+      history.pushState(null, '', next)
+    }
+  }
+  return true
+}
+
+/**
+ * Same-page #hash clicks: smooth scroll instead of an instant jump.
+ * Cross-route links like `/#advantage` are left alone when not on `/`.
+ */
+export function handleAijiniuSectionClick(
+  e: MouseEvent<HTMLAnchorElement>,
+  options?: { beforeScroll?: () => void; delayMs?: number }
+) {
+  const href = e.currentTarget.getAttribute('href') || ''
+  let id: string | null = null
+
+  if (href.startsWith('#')) {
+    id = decodeURIComponent(href.slice(1))
+  } else if (href.startsWith('/#')) {
+    const path = window.location.pathname
+    if (path === '/' || path === '') {
+      id = decodeURIComponent(href.slice(2))
+    }
+  }
+
+  if (!id) return
+
+  e.preventDefault()
+  options?.beforeScroll?.()
+
+  const delay = options?.delayMs ?? 0
+  if (delay > 0) {
+    window.setTimeout(() => scrollToAijiniuSection(id!), delay)
+  } else {
+    // Next frame: layout after menu close / sticky nav is stable
+    requestAnimationFrame(() => scrollToAijiniuSection(id!))
+  }
+}
 
 // 主题专属的胶囊双色按钮语言切换器
 function AijiniuLanguageSwitcher() {
@@ -137,7 +202,9 @@ export function AijiniuHeader({ activeTab = 'home' }: AijiniuHeaderProps) {
         </Link>
         <div className="nav-links">
           {isHome ? (
-            <a href="#advantage">{t('Core Advantages')}</a>
+            <a href="#advantage" onClick={handleAijiniuSectionClick}>
+              {t('Core Advantages')}
+            </a>
           ) : (
             <a href="/#advantage">{t('Core Advantages')}</a>
           )}
@@ -147,7 +214,9 @@ export function AijiniuHeader({ activeTab = 'home' }: AijiniuHeaderProps) {
           </Link>
 
           {isHome ? (
-            <a href="#industry">{t('Industry Applications')}</a>
+            <a href="#industry" onClick={handleAijiniuSectionClick}>
+              {t('Industry Applications')}
+            </a>
           ) : (
             <a href="/#industry">{t('Industry Applications')}</a>
           )}
@@ -198,7 +267,17 @@ export function AijiniuHeader({ activeTab = 'home' }: AijiniuHeaderProps) {
           </div>
           <nav className="m-menu-links">
             {isHome ? (
-              <a href="#advantage" onClick={closeMobileMenu}>{t('Core Advantages')}</a>
+              <a
+                href="#advantage"
+                onClick={(e) =>
+                  handleAijiniuSectionClick(e, {
+                    beforeScroll: closeMobileMenu,
+                    delayMs: 80,
+                  })
+                }
+              >
+                {t('Core Advantages')}
+              </a>
             ) : (
               <a href="/#advantage" onClick={closeMobileMenu}>{t('Core Advantages')}</a>
             )}
@@ -208,13 +287,33 @@ export function AijiniuHeader({ activeTab = 'home' }: AijiniuHeaderProps) {
             </Link>
 
             {isHome ? (
-              <a href="#industry" onClick={closeMobileMenu}>{t('Industry Applications')}</a>
+              <a
+                href="#industry"
+                onClick={(e) =>
+                  handleAijiniuSectionClick(e, {
+                    beforeScroll: closeMobileMenu,
+                    delayMs: 80,
+                  })
+                }
+              >
+                {t('Industry Applications')}
+              </a>
             ) : (
               <a href="/#industry" onClick={closeMobileMenu}>{t('Industry Applications')}</a>
             )}
 
             {isHome ? (
-              <a href="#onboarding" onClick={closeMobileMenu}>{t('Onboarding Process')}</a>
+              <a
+                href="#onboarding"
+                onClick={(e) =>
+                  handleAijiniuSectionClick(e, {
+                    beforeScroll: closeMobileMenu,
+                    delayMs: 80,
+                  })
+                }
+              >
+                {t('Onboarding Process')}
+              </a>
             ) : (
               <a href="/#onboarding" onClick={closeMobileMenu}>{t('Onboarding Process')}</a>
             )}

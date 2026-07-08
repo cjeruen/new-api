@@ -16,11 +16,15 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { useEffect, useLayoutEffect, useRef, useState, useMemo, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, useMemo, useCallback, type ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useAuthStore } from '@/stores/auth-store'
 import { useAijiniuTranslation } from './locales'
-import { AijiniuHeader } from './header'
+import {
+  AijiniuHeader,
+  handleAijiniuSectionClick,
+  scrollToAijiniuSection,
+} from './header'
 import { AijiniuFooter } from './footer'
 import { usePricingData } from '@/features/pricing/hooks/use-pricing-data'
 import { getLobeIcon } from '@/lib/lobe-icon'
@@ -223,6 +227,36 @@ export function AijiniuHome() {
 
     const showLiveMatrix = !isLoading && activeModels.length > 0
 
+    const animateCount = useCallback((el: HTMLElement) => {
+        const target = +(el.dataset.count || 0);
+        const suffix = el.dataset.suffix || '';
+        const dur = 1100;
+        let start: number | null = null;
+        const tick = (t: number) => {
+            if (start === null) start = t;
+            const p = Math.min(1, (t - start) / dur);
+            const eased = 1 - Math.pow(1 - p, 3);
+            el.textContent = Math.round(target * eased) + suffix;
+            if (p < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+    }, []);
+
+    useEffect(() => {
+        if (isLoading || pricingStats.modelCount === 0) return;
+
+        document.querySelectorAll('.stats-band .num').forEach((el: any) => {
+            const target = parseInt(el.getAttribute('data-count') || '0', 10);
+            if (target > 0 && !el.dataset.done) {
+                const parentReveal = el.closest('.reveal');
+                if (parentReveal && parentReveal.classList.contains('in')) {
+                    el.dataset.done = '1';
+                    animateCount(el);
+                }
+            }
+        });
+    }, [pricingStats, isLoading, animateCount]);
+
     useEffect(() => {
         // 1. Run 3D tilt logic
         const runTilt = () => {
@@ -355,13 +389,9 @@ export function AijiniuHome() {
                 }
                 pulses = [];
             }
-            function project(p: any, ry: number, tx: number) {
-                const cosY = Math.cos(ry),
-                    sinY = Math.sin(ry);
+            function project(p: any, cosY: number, sinY: number, cosX: number, sinX: number) {
                 const x = p.x * cosY - p.z * sinY;
                 const z = p.x * sinY + p.z * cosY;
-                const cosX = Math.cos(tx),
-                    sinX = Math.sin(tx);
                 const y2 = p.y * cosX - z * sinX;
                 const z2 = p.y * sinX + z * cosX;
                 return { sx: cx + x * R, sy: cy + y2 * R, z: z2 };
@@ -393,8 +423,12 @@ export function AijiniuHome() {
             function render() {
                 ctx.clearRect(0, 0, W, H);
                 const tx = tiltAng;
+                const cosY = Math.cos(rotY),
+                    sinY = Math.sin(rotY),
+                    cosX = Math.cos(tx),
+                    sinX = Math.sin(tx);
                 const P = new Array(pts.length);
-                for (let i = 0; i < pts.length; i++) P[i] = project(pts[i], rotY, tx);
+                for (let i = 0; i < pts.length; i++) P[i] = project(pts[i], cosY, sinY, cosX, sinX);
 
                 ctx.fillStyle = glowGrad;
                 ctx.fillRect(0, 0, W, H);
@@ -541,21 +575,6 @@ export function AijiniuHome() {
 
         // 4. Scroll reveal and stat counting logic
         const runReveal = () => {
-            const animateCount = (el: HTMLElement) => {
-                const target = +(el.dataset.count || 0);
-                const suffix = el.dataset.suffix || '';
-                const dur = 1100;
-                let start: number | null = null;
-                const tick = (t: number) => {
-                    if (start === null) start = t;
-                    const p = Math.min(1, (t - start) / dur);
-                    const eased = 1 - Math.pow(1 - p, 3);
-                    el.textContent = Math.round(target * eased) + suffix;
-                    if (p < 1) requestAnimationFrame(tick);
-                };
-                requestAnimationFrame(tick);
-            };
-
             document.querySelectorAll('.reveal').forEach((el: any) => {
                 const sibs = [...(el.parentElement?.children || [])].filter((n: any) =>
                     n.classList?.contains('reveal')
@@ -571,11 +590,16 @@ export function AijiniuHome() {
                             const targetEl = e.target as HTMLElement;
                             targetEl.classList.add('in');
                             const num = targetEl.querySelector('.num') as HTMLElement;
-                            if (num && !num.dataset.done) {
-                                num.dataset.done = '1';
-                                animateCount(num);
+                            if (num) {
+                                const target = +(num.dataset.count || 0);
+                                if (target > 0 && !num.dataset.done) {
+                                    num.dataset.done = '1';
+                                    animateCount(num);
+                                    io.unobserve(targetEl);
+                                }
+                            } else {
+                                io.unobserve(targetEl);
                             }
-                            io.unobserve(targetEl);
                         }
                     }
                 },
@@ -595,6 +619,36 @@ export function AijiniuHome() {
             if (cancelReveal) cancelReveal();
         };
     }, []);
+
+    // From other routes (e.g. /#industry): avoid hard jump — reset to top, then ease to section
+    useLayoutEffect(() => {
+        const hash = window.location.hash
+        if (!hash || hash.length < 2) return
+
+        const id = decodeURIComponent(hash.slice(1))
+        if (!document.getElementById(id)) return
+
+        // Cancel the browser's instant fragment jump before paint when possible
+        window.scrollTo({ top: 0, behavior: 'auto' })
+    }, [])
+
+    useEffect(() => {
+        const hash = window.location.hash
+        if (!hash || hash.length < 2) return
+
+        const id = decodeURIComponent(hash.slice(1))
+        if (!document.getElementById(id)) return
+
+        let cancelled = false
+        const t = window.setTimeout(() => {
+            if (!cancelled) scrollToAijiniuSection(id, { updateHash: false })
+        }, 60)
+
+        return () => {
+            cancelled = true
+            window.clearTimeout(t)
+        }
+    }, [])
 
     const loginLink = (isAuthenticated ? '/dashboard' : '/sign-in') as any;
 
@@ -728,7 +782,14 @@ export function AijiniuHome() {
 
                     <div className="hero-cta reveal">
                         <Link to={loginLink} className="btn btn-primary">{t('立即开启 AI 升级')}<span className="arrow">{t('→')}</span></Link>
-                        <a href="#advantage" className="btn btn-ghost">{t('了解核心优势')}<span className="arrow">{t('↓')}</span></a>
+                        <a
+                            href="#advantage"
+                            className="btn btn-ghost"
+                            onClick={handleAijiniuSectionClick}
+                        >
+                            {t('了解核心优势')}
+                            <span className="arrow">{t('↓')}</span>
+                        </a>
                     </div>
 
                     {/* 全球模型亮点 */}

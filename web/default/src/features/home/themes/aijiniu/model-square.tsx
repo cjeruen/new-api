@@ -186,13 +186,18 @@ export function AijiniuModelSquare() {
     return [...mappedDbModels, ...filteredStatic]
   }, [models, t])
 
+  // Number of active vendors (vendors of models that have tags)
+  const activeVendorsCount = useMemo(() => {
+    const vendorSet = new Set(allDisplayModels.map((m) => m.vendor_name).filter(Boolean))
+    return vendorSet.size
+  }, [allDisplayModels])
+
   // Stats number animation
   useEffect(() => {
     if (isLoading || !allDisplayModels || allDisplayModels.length === 0) return
 
-    const vendorSet = new Set(allDisplayModels.map((m) => m.vendor_name).filter(Boolean))
     const totalModels = allDisplayModels.length
-    const totalVendors = vendorSet.size || 10
+    const totalVendors = activeVendorsCount || 10
 
     const dur = 1100
     let start: number | null = null
@@ -216,7 +221,7 @@ export function AijiniuModelSquare() {
 
     frameId = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frameId)
-  }, [isLoading, allDisplayModels])
+  }, [isLoading, allDisplayModels, activeVendorsCount])
 
   // Filter combined list according to selected category & search input
   const filteredModels = useMemo(() => {
@@ -235,41 +240,7 @@ export function AijiniuModelSquare() {
     })
   }, [allDisplayModels, curFilter, searchQuery])
 
-  // Listen to list changes to bind scroll reveal animations dynamically
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      // 1. Setup staggered animation delay triggers
-      document.querySelectorAll('.reveal').forEach((el: any) => {
-        const sibs = [...(el.parentElement?.children || [])].filter((n: any) =>
-          n.classList?.contains('reveal')
-        );
-        const idx = sibs.indexOf(el);
-        if (idx > 0) el.style.setProperty('--rd', idx * 70 + 'ms');
-      });
-
-      // 2. Set up IntersectionObserver target registration
-      const io = new IntersectionObserver(
-        (entries) => {
-          for (const e of entries) {
-            if (e.isIntersecting) {
-              const targetEl = e.target as HTMLElement;
-              targetEl.classList.add('in');
-              io.unobserve(targetEl);
-            }
-          }
-        },
-        { threshold: 0.15 }
-      );
-
-      document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
-
-      return () => {
-        io.disconnect();
-      };
-    }, 50);
-
-    return () => clearTimeout(timer);
-  }, [filteredModels, isLoading]);
+  // Removed old manual DOM IntersectionObserver reveal effect. Staggered animations are now driven via CSS Keyframes.
 
 
 
@@ -321,7 +292,7 @@ export function AijiniuModelSquare() {
               <span>{t('主流大模型')}</span>
             </div>
             <div className="mp-stat">
-              <b>{stats.vendors}+</b>
+              <b>{stats.vendors || activeVendorsCount || 10}+</b>
               <span>{t('AI 厂商')}</span>
             </div>
             <div className="mp-stat">
@@ -399,7 +370,7 @@ export function AijiniuModelSquare() {
           <div className="mp-empty show">{t('没有匹配的模型，换个关键词试试～')}</div>
         ) : (
           <div className="mp-grid">
-            {filteredModels.map((model) => {
+            {filteredModels.map((model, idx) => {
               const vendor = model.vendor_name
               const isPerCall = model.quota_type === 1
               const prices = getAijiniuModelDisplayPrices(
@@ -424,7 +395,11 @@ export function AijiniuModelSquare() {
                 )
 
               return (
-                <article key={model.id} className="mp-card reveal">
+                <article
+                  key={model.id}
+                  className="mp-card reveal"
+                  style={{ '--rd': `${idx * 70}ms` } as React.CSSProperties}
+                >
                   <div className="mp-top">
                     <span className="mp-logo">
                       {getLobeIcon(model.icon, 28)}

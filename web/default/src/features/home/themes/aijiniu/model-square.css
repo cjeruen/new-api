@@ -540,3 +540,13 @@ For commercial licensing, please contact support@quantumnous.com
         grid-template-columns: 1fr;
     }
 }
+
+/* Force CSS-driven staggered entry animation for grid cards, bypassing IntersectionObserver */
+.mp-card.reveal {
+    opacity: 1;
+    transform: none;
+    animation: mp-enter 0.6s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    animation-delay: var(--rd, 0ms);
+    transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+}
+

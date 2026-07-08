@@ -186,13 +186,6 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     "一处接入全球 AI": "一处接入全球 AI",
     "主流大模型一处接入、自由切换，按 Token 透明计费，覆盖文本、推理、代码、图片与视频等多种能力。": "{count}+ 主流大模型一处接入、自由切换，按 Token 透明计费，覆盖文本、推理、代码、图片与视频等多种能力。",
     "搜索模型 / 厂商，如 DeepSeek、Claude…": "搜索模型 / 厂商，如 DeepSeek、Claude…",
-    "推理": "推理",
-    "代码": "代码",
-    "图片": "图片",
-    "视频": "视频",
-    "文本": "文本",
-    "编码": "编码",
-    "多模态": "多模态",
     "输入": "输入",
     "输出": "输出",
     "计费": "计费",
@@ -209,7 +202,6 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
 
     // 模型广场补充
     "/百万tokens": "/百万tokens",
-    "上下文": "上下文",
     "AI 厂商": "AI 厂商",
     "搜索模型": "搜索模型",
     "货币": "货币",
@@ -223,7 +215,50 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     "Reasoning": "深度推理",
     "Code": "代码",
     "Image": "图片",
-    "Video": "视频"
+    "Video": "视频",
+
+    // Tags（中文 key / 英文 key → 中文展示，每个 key 只保留一处）
+    "对话": "对话",
+    "通用": "通用",
+    "语音": "语音",
+    "视觉": "视觉",
+    "绘图": "绘图",
+    "向量": "向量",
+    "文本": "文本",
+    "推理": "推理",
+    "代码": "代码",
+    "图片": "图片",
+    "视频": "视频",
+    "多模态": "多模态",
+    "编码": "编码",
+    "免费": "免费",
+    "限免": "限免",
+    "高性价比": "高性价比",
+    "高性能": "高性能",
+    "上下文": "上下文",
+    "text": "文本",
+    "reasoning": "推理",
+    "reason": "推理",
+    "code": "代码",
+    "coding": "编码",
+    "image": "图片",
+    "video": "视频",
+    "audio": "语音",
+    "voice": "语音",
+    "speech": "语音",
+    "chat": "对话",
+    "general": "通用",
+    "multimodal": "多模态",
+    "vision": "视觉",
+    "draw": "绘图",
+    "drawing": "绘图",
+    "embeddings": "向量",
+    "embedding": "向量",
+    "free": "免费",
+    "high value": "高性价比",
+    "low cost": "低成本",
+    "high performance": "高性能",
+    "function calling": "函数调用",
   },
   en: {
     // 通用 / 导航 / 底部
@@ -361,13 +396,6 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     "一处接入全球 AI": "Access Global AI in One Place",
     "主流大模型一处接入、自由切换，按 Token 透明计费，覆盖文本、推理、代码、图片与视频等多种能力。": "Integrate and switch freely across {count}+ mainstream LLMs in one place, with transparent per-Token billing across text, reasoning, code, image and video.",
     "搜索模型 / 厂商，如 DeepSeek、Claude…": "Search models / vendors, e.g. DeepSeek, Claude…",
-    "推理": "Reasoning",
-    "代码": "Code",
-    "图片": "Image",
-    "视频": "Video",
-    "文本": "Text",
-    "编码": "Coding",
-    "多模态": "Multimodal",
     "输入": "Input",
     "输出": "Output",
     "计费": "Billing",
@@ -384,7 +412,6 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
 
     // 模型广场补充
     "/百万tokens": "/M tokens",
-    "上下文": "Context",
     "AI 厂商": "AI Vendors",
     "搜索模型": "Search models",
     "货币": "Currency",
@@ -398,7 +425,50 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     "Reasoning": "Reasoning",
     "Code": "Code",
     "Image": "Image",
-    "Video": "Video"
+    "Video": "Video",
+
+    // Tags（中文 key / 英文 key → 英文展示，每个 key 只保留一处）
+    "对话": "Chat",
+    "通用": "General",
+    "语音": "Audio",
+    "视觉": "Vision",
+    "绘图": "Drawing",
+    "向量": "Embeddings",
+    "文本": "Text",
+    "推理": "Reasoning",
+    "代码": "Code",
+    "图片": "Image",
+    "视频": "Video",
+    "多模态": "Multimodal",
+    "编码": "Coding",
+    "免费": "Free",
+    "限免": "Limited Free",
+    "高性价比": "High Value",
+    "高性能": "High Performance",
+    "上下文": "Context",
+    "text": "Text",
+    "reasoning": "Reasoning",
+    "reason": "Reasoning",
+    "code": "Code",
+    "coding": "Coding",
+    "image": "Image",
+    "video": "Video",
+    "audio": "Audio",
+    "voice": "Audio",
+    "speech": "Audio",
+    "chat": "Chat",
+    "general": "General",
+    "multimodal": "Multimodal",
+    "vision": "Vision",
+    "draw": "Drawing",
+    "drawing": "Drawing",
+    "embeddings": "Embeddings",
+    "embedding": "Embeddings",
+    "free": "Free",
+    "high value": "High Value",
+    "low cost": "Low Cost",
+    "high performance": "High Performance",
+    "function calling": "Function Calling",
   }
 }
 
@@ -412,8 +482,17 @@ export function useAijiniuTranslation() {
   const displayBrandName = resolveBrandName(brandName, lang)
   const displayShortBrandName = resolveShortBrandName(brandName, lang)
 
-  const lookup = (key: string): string =>
-    TRANSLATIONS[lang]?.[key] ?? TRANSLATIONS['zh']?.[key] ?? key
+  const lookup = (key: string): string => {
+    const k = key.trim()
+    const lowerK = k.toLowerCase()
+    return (
+      TRANSLATIONS[lang]?.[k] ??
+      TRANSLATIONS[lang]?.[lowerK] ??
+      TRANSLATIONS['zh']?.[k] ??
+      TRANSLATIONS['zh']?.[lowerK] ??
+      k
+    )
+  }
 
   const applyVars = (
     text: string,
