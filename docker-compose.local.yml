@@ -1,0 +1,58 @@
+# Local Development - MySQL + Redis only (backend runs on host via ./start_local.sh)
+#
+# Usage:
+#   1. docker compose -f docker-compose.local.yml up -d
+#   2. ./start_local.sh
+#   3. Optional frontend: cd web && bun install && bun run dev
+#
+# Stop:
+#   docker compose -f docker-compose.local.yml down
+#
+# Reset data:
+#   docker compose -f docker-compose.local.yml down -v
+#
+# Connect from host:
+#   MySQL: 127.0.0.1:13306  user=root password=123456 db=new-api
+#   Redis: 127.0.0.1:16379
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: new-api-local-redis
+    restart: unless-stopped
+    ports:
+      - "16379:6379"
+    networks:
+      - local-network
+
+  mysql:
+    image: mysql:8.2
+    container_name: new-api-local-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: new-api
+      TZ: Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+    volumes:
+      - local_mysql_data:/var/lib/mysql
+    ports:
+      - "13306:3306"
+    networks:
+      - local-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p123456"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 20s
+
+volumes:
+  local_mysql_data:
+
+networks:
+  local-network:
+    driver: bridge
