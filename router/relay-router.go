@@ -132,6 +132,14 @@ func SetRelayRouter(router *gin.Engine) {
 			controller.Relay(c, types.RelayFormatOpenAIAudio)
 		})
 
+		// xAI native text-to-speech
+		httpRouter.POST("/tts", func(c *gin.Context) {
+			controller.Relay(c, types.RelayFormatXAITTS)
+		})
+		httpRouter.GET("/tts/voices", func(c *gin.Context) {
+			controller.Relay(c, types.RelayFormatXAITTS)
+		})
+
 		// rerank related routes
 		httpRouter.POST("/rerank", func(c *gin.Context) {
 			controller.Relay(c, types.RelayFormatRerank)

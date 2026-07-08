@@ -15,6 +15,7 @@ import (
 	"github.com/QuantumNous/new-api/dto"
 	"github.com/QuantumNous/new-api/i18n"
 	"github.com/QuantumNous/new-api/model"
+	"github.com/QuantumNous/new-api/relay/channel/xai"
 	relayconstant "github.com/QuantumNous/new-api/relay/constant"
 	"github.com/QuantumNous/new-api/service"
 	"github.com/QuantumNous/new-api/setting/ratio_setting"
@@ -334,6 +335,21 @@ func getModelRequest(c *gin.Context) (*ModelRequest, bool, error) {
 		}
 		if _, ok := c.Get("relay_mode"); !ok {
 			c.Set("relay_mode", relayMode)
+		}
+	} else if strings.HasPrefix(c.Request.URL.Path, "/v1/tts") {
+		if strings.HasPrefix(c.Request.URL.Path, "/v1/tts/voices") {
+			relayMode := relayconstant.RelayModeXAITTSVoices
+			modelRequest.Model = xai.DefaultXAITTSRoutingModel
+			c.Set("relay_mode", relayMode)
+		} else if c.Request.Method == http.MethodPost {
+			relayMode := relayconstant.RelayModeXAITTSSpeech
+			if req, err := getModelFromRequest(c); err == nil && req != nil {
+				modelRequest.Model = req.Model
+			}
+			modelRequest.Model = common.GetStringIfEmpty(modelRequest.Model, xai.DefaultXAITTSRoutingModel)
+			c.Set("relay_mode", relayMode)
+		} else {
+			return nil, false, errors.New(i18n.T(c, i18n.MsgDistributorInvalidRequest, map[string]any{"Error": "method not allowed"}))
 		}
 	} else if strings.HasPrefix(c.Request.URL.Path, "/v1beta/models/") || strings.HasPrefix(c.Request.URL.Path, "/v1/models/") {
 		// Gemini API 路径处理: /v1beta/models/gemini-2.0-flash:generateContent

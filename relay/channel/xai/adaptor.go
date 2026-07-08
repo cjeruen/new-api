@@ -128,6 +128,10 @@ func (a *Adaptor) DoRequest(c *gin.Context, info *relaycommon.RelayInfo, request
 
 func (a *Adaptor) DoResponse(c *gin.Context, resp *http.Response, info *relaycommon.RelayInfo) (usage any, err *types.NewAPIError) {
 	switch info.RelayMode {
+	case constant.RelayModeXAITTSSpeech:
+		usage = XAITTSSpeechHandler(c, resp, info)
+	case constant.RelayModeXAITTSVoices:
+		usage, err = XAITTSVoicesHandler(c, resp, info)
 	case constant.RelayModeImagesGenerations, constant.RelayModeImagesEdits:
 		usage, err = openai.OpenaiImageHandler(c, info, resp)
 	case constant.RelayModeResponses:

@@ -16,6 +16,7 @@ import (
 	"github.com/samber/lo"
 
 	"github.com/gin-gonic/gin"
+	"github.com/tidwall/gjson"
 )
 
 func GetAndValidateRequest(c *gin.Context, format types.RelayFormat) (request dto.Request, err error) {
@@ -47,12 +48,53 @@ func GetAndValidateRequest(c *gin.Context, format types.RelayFormat) (request dt
 		request, err = GetAndValidateRerankRequest(c)
 	case types.RelayFormatOpenAIAudio:
 		request, err = GetAndValidAudioRequest(c, relayMode)
+	case types.RelayFormatXAITTS:
+		request, err = GetAndValidXAITTSRequest(c, relayMode)
 	case types.RelayFormatOpenAIRealtime:
 		request = &dto.BaseRequest{}
 	default:
 		return nil, fmt.Errorf("unsupported relay format: %s", format)
 	}
 	return request, err
+}
+
+func GetAndValidXAITTSRequest(c *gin.Context, relayMode int) (dto.Request, error) {
+	switch relayMode {
+	case relayconstant.RelayModeXAITTSVoices:
+		return &dto.BaseRequest{}, nil
+	case relayconstant.RelayModeXAITTSSpeech:
+		storage, err := common.GetBodyStorage(c)
+		if err != nil {
+			return nil, err
+		}
+		raw, err := storage.Bytes()
+		if err != nil {
+			return nil, err
+		}
+		if !gjson.ValidBytes(raw) {
+			return nil, errors.New("invalid JSON request body")
+		}
+		text := strings.TrimSpace(gjson.GetBytes(raw, "text").String())
+		if text == "" {
+			return nil, errors.New("text is required")
+		}
+		if len(text) > dto.MaxXAITTSTextLength {
+			return nil, fmt.Errorf("text must be at most %d characters", dto.MaxXAITTSTextLength)
+		}
+		if strings.TrimSpace(gjson.GetBytes(raw, "language").String()) == "" {
+			return nil, errors.New("language is required")
+		}
+		req := &dto.XAITTSRequest{}
+		if err := common.Unmarshal(raw, req); err != nil {
+			return nil, err
+		}
+		if strings.TrimSpace(req.Model) == "" {
+			req.Model = "grok-tts"
+		}
+		return req, nil
+	default:
+		return nil, errors.New("unsupported xAI TTS relay mode")
+	}
 }
 
 func GetAndValidAudioRequest(c *gin.Context, relayMode int) (*dto.AudioRequest, error) {

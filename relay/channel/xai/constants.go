@@ -1,5 +1,7 @@
 package xai
 
+const DefaultXAITTSRoutingModel = "grok-tts"
+
 var ModelList = []string{
 	// language models
 	"grok-4-1-fast-reasoning",
@@ -25,6 +27,8 @@ var ModelList = []string{
 	"grok-imagine-image-pro",
 	"grok-imagine-image",
 	"grok-2-image-1212",
+	// text-to-speech (proxy routing model; upstream POST /v1/tts has no model field)
+	DefaultXAITTSRoutingModel,
 	// video generation models
 	"grok-imagine-video",
 	"grok-imagine-video-1.5",
