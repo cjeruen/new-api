@@ -15,6 +15,7 @@ import (
 	"github.com/QuantumNous/new-api/model"
 	"github.com/QuantumNous/new-api/relay/channel"
 	"github.com/QuantumNous/new-api/relay/channel/task/taskcommon"
+	taskxai "github.com/QuantumNous/new-api/relay/channel/task/xai"
 	relaycommon "github.com/QuantumNous/new-api/relay/common"
 	relayconstant "github.com/QuantumNous/new-api/relay/constant"
 	"github.com/QuantumNous/new-api/relay/helper"
@@ -393,11 +394,24 @@ func videoFetchByIDRespBodyBuilder(c *gin.Context) (respBody []byte, taskResp *d
 		return
 	}
 
-	// OpenAI Video API 格式: 走各 adaptor 的 ConvertToOpenAIVideo
+	// Video fetch: xAI native or OpenAI-compatible format
 	if isOpenAIVideoAPI {
 		adaptor := GetTaskAdaptor(originTask.Platform)
 		if adaptor == nil {
 			taskResp = service.TaskErrorWrapperLocal(fmt.Errorf("invalid channel id: %d", originTask.ChannelId), "invalid_channel_id", http.StatusBadRequest)
+			return
+		}
+		if originTask.Platform == taskxai.TaskPlatform {
+			if converter, ok := adaptor.(channel.XAIVideoConverter); ok {
+				xaiVideoData, err := converter.ConvertToXAIVideo(originTask)
+				if err != nil {
+					taskResp = service.TaskErrorWrapper(err, "convert_to_xai_video_failed", http.StatusInternalServerError)
+					return
+				}
+				respBody = xaiVideoData
+				return
+			}
+			taskResp = service.TaskErrorWrapperLocal(fmt.Errorf("xAI video converter not available"), "not_implemented", http.StatusNotImplemented)
 			return
 		}
 		if converter, ok := adaptor.(channel.OpenAIVideoConverter); ok {

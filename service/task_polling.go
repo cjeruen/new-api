@@ -400,11 +400,15 @@ func updateVideoTasks(ctx context.Context, platform constant.TaskPlatform, chann
 	if adaptor == nil {
 		return fmt.Errorf("video adaptor not found")
 	}
-	info := &relaycommon.RelayInfo{}
-	info.ChannelMeta = &relaycommon.ChannelMeta{
-		ChannelBaseUrl: cacheGetChannel.GetBaseURL(),
+	info := &relaycommon.RelayInfo{
+		ChannelMeta: &relaycommon.ChannelMeta{
+			ChannelType:    cacheGetChannel.Type,
+			ChannelId:      channelId,
+			ChannelBaseUrl: cacheGetChannel.GetBaseURL(),
+			ApiKey:         cacheGetChannel.Key,
+			ChannelSetting: cacheGetChannel.GetSetting(),
+		},
 	}
-	info.ApiKey = cacheGetChannel.Key
 	adaptor.Init(info)
 	disablePollingSleep := cacheGetChannel.GetOtherSettings().DisableTaskPollingSleep
 	for i, taskId := range taskIds {
