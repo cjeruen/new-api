@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/QuantumNous/new-api/common"
@@ -117,8 +118,17 @@ func (a *TaskAdaptor) Init(info *relaycommon.RelayInfo) {
 
 // ValidateRequestAndSetAction parses body, validates fields and sets default action.
 func (a *TaskAdaptor) ValidateRequestAndSetAction(c *gin.Context, info *relaycommon.RelayInfo) (taskErr *dto.TaskError) {
-	// Accept only POST /v1/video/generations as "generate" action.
-	return relaycommon.ValidateBasicTaskRequest(c, info, constant.TaskActionGenerate)
+	if taskErr := relaycommon.ValidateBasicTaskRequest(c, info, constant.TaskActionTextGenerate); taskErr != nil {
+		return taskErr
+	}
+	req, err := relaycommon.GetTaskRequest(c)
+	if err != nil {
+		return relaycommon.CreateTaskError(err, "get_task_request_failed", http.StatusBadRequest, true)
+	}
+	action := resolveDoubaoTaskAction(&req)
+	info.Action = action
+	relaycommon.StoreTaskRequest(c, info, action, req)
+	return nil
 }
 
 // BuildRequestURL constructs the upstream URL.
@@ -147,6 +157,66 @@ func (a *TaskAdaptor) EstimateBilling(c *gin.Context, info *relaycommon.RelayInf
 		return nil
 	}
 	return map[string]float64{"video_input": ratio}
+}
+
+func resolveDoubaoTaskAction(req *relaycommon.TaskSubmitReq) string {
+	if strings.TrimSpace(req.Image) != "" || req.HasImage() {
+		return resolveDoubaoImageAction(req)
+	}
+	if hasImageInMetadata(req.Metadata) {
+		return resolveDoubaoImageAction(req)
+	}
+	if hasVideoInMetadata(req.Metadata) {
+		return constant.TaskActionReferenceGenerate
+	}
+	return constant.TaskActionTextGenerate
+}
+
+func resolveDoubaoImageAction(req *relaycommon.TaskSubmitReq) string {
+	imageCount := len(req.Images)
+	if strings.TrimSpace(req.Image) != "" && imageCount == 0 {
+		imageCount = 1
+	}
+	if imageCount == 0 {
+		imageCount = countImagesInMetadata(req.Metadata)
+	}
+	if imageCount >= 2 {
+		return constant.TaskActionFirstTailGenerate
+	}
+	return constant.TaskActionGenerate
+}
+
+func hasImageInMetadata(metadata map[string]interface{}) bool {
+	return countImagesInMetadata(metadata) > 0
+}
+
+func countImagesInMetadata(metadata map[string]interface{}) int {
+	if metadata == nil {
+		return 0
+	}
+	contentRaw, ok := metadata["content"]
+	if !ok {
+		return 0
+	}
+	contentSlice, ok := contentRaw.([]interface{})
+	if !ok {
+		return 0
+	}
+	count := 0
+	for _, item := range contentSlice {
+		itemMap, ok := item.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		if itemMap["type"] == "image_url" {
+			count++
+			continue
+		}
+		if _, has := itemMap["image_url"]; has {
+			count++
+		}
+	}
+	return count
 }
 
 // hasVideoInMetadata 直接检查 metadata 的 content 数组是否包含 video_url 条目，
