@@ -49,13 +49,16 @@ func validateXAIVideoRequest(c *gin.Context, info *relaycommon.RelayInfo) *dto.T
 	}
 
 	duration := int(gjson.GetBytes(body, "duration").Int())
-	if taskErr := validateXAIVideoDuration(duration); taskErr != nil {
+	if taskErr := validateXAIVideoDurationForPath(nativeVideoPostPath(c), duration); taskErr != nil {
 		return taskErr
 	}
 	if err := validateNativeVideoConstraints(body); err != nil {
 		return relaycommon.CreateTaskError(err, "invalid_request", http.StatusBadRequest, true)
 	}
 	if path := nativeVideoPostPath(c); path == NativeVideoEditsPath || path == NativeVideoExtensionsPath {
+		if err := validateNativeVideoEditExtensionParams(body, path); err != nil {
+			return relaycommon.CreateTaskError(err, "invalid_request", http.StatusBadRequest, true)
+		}
 		if err := validateNativeVideoSourceVideo(body); err != nil {
 			return relaycommon.CreateTaskError(err, "invalid_request", http.StatusBadRequest, true)
 		}
@@ -84,6 +87,13 @@ func validateXAIVideoRequest(c *gin.Context, info *relaycommon.RelayInfo) *dto.T
 	return nil
 }
 
+func validateXAIVideoDurationForPath(path string, duration int) *dto.TaskError {
+	if path == NativeVideoExtensionsPath {
+		return validateXAIVideoExtensionDuration(duration)
+	}
+	return validateXAIVideoDuration(duration)
+}
+
 func validateXAIVideoDuration(duration int) *dto.TaskError {
 	if duration == 0 {
 		return nil
@@ -91,6 +101,21 @@ func validateXAIVideoDuration(duration int) *dto.TaskError {
 	if duration < minVideoDuration || duration > maxVideoDuration {
 		return relaycommon.CreateTaskError(
 			fmt.Errorf("duration must be between %d and %d seconds", minVideoDuration, maxVideoDuration),
+			"invalid_duration",
+			http.StatusBadRequest,
+			true,
+		)
+	}
+	return nil
+}
+
+func validateXAIVideoExtensionDuration(duration int) *dto.TaskError {
+	if duration == 0 {
+		return nil
+	}
+	if duration < minVideoDuration || duration > maxVideoExtensionDuration {
+		return relaycommon.CreateTaskError(
+			fmt.Errorf("duration must be between %d and %d seconds", minVideoDuration, maxVideoExtensionDuration),
 			"invalid_duration",
 			http.StatusBadRequest,
 			true,

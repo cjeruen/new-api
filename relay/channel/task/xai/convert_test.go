@@ -20,9 +20,32 @@ func TestValidateNativeVideoSourceVideo(t *testing.T) {
 	err := validateNativeVideoSourceVideo([]byte(`{"video":{"url":"https://example.com/video.mp4"}}`))
 	require.NoError(t, err)
 
+	err = validateNativeVideoSourceVideo([]byte(`{"video":{"url":"https://example.com/video.mov"}}`))
+	require.Error(t, err)
+	require.Contains(t, err.Error(), ".mp4 extension")
+
+	err = validateNativeVideoSourceVideo([]byte(`{"video":{"file_id":"file_abc"}}`))
+	require.NoError(t, err)
+
 	err = validateNativeVideoSourceVideo([]byte(`{"model":"grok-imagine-video","prompt":"edit"}`))
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "video is required")
+}
+
+func TestValidateNativeVideoEditExtensionParams(t *testing.T) {
+	err := validateNativeVideoEditExtensionParams([]byte(`{"aspect_ratio":"16:9"}`), NativeVideoExtensionsPath)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "aspect_ratio is not supported for video extension")
+
+	err = validateNativeVideoEditExtensionParams([]byte(`{"resolution":"720p"}`), NativeVideoEditsPath)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "resolution is not supported for video editing")
+
+	err = validateNativeVideoEditExtensionParams([]byte(`{"duration":6}`), NativeVideoExtensionsPath)
+	require.NoError(t, err)
+
+	err = validateNativeVideoEditExtensionParams([]byte(`{"aspect_ratio":"16:9"}`), NativeVideoGenerationsPath)
+	require.NoError(t, err)
 }
 
 func TestValidateNativeVideoConstraints(t *testing.T) {

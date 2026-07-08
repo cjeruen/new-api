@@ -2,6 +2,7 @@ package xai
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/QuantumNous/new-api/model"
@@ -9,10 +10,11 @@ import (
 )
 
 const (
-	minVideoDuration    = 1
-	maxVideoDuration    = 15
-	defaultVideoSeconds = 5
-	maxVideoReferences  = 7
+	minVideoDuration          = 2
+	maxVideoDuration          = 15
+	maxVideoExtensionDuration = 10
+	defaultVideoSeconds       = 5
+	maxVideoReferences        = 7
 )
 
 func nativeVideoInputImageURL(rawJSON []byte) (string, error) {
@@ -72,6 +74,43 @@ func validateNativeVideoSourceVideo(body []byte) error {
 	}
 	if url != "" && fileID != "" {
 		return fmt.Errorf("video must provide exactly one of url or file_id")
+	}
+	if url != "" {
+		if err := validateNativeVideoURLExtension(url); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func validateNativeVideoURLExtension(rawURL string) error {
+	rawURL = strings.TrimSpace(rawURL)
+	if rawURL == "" || strings.HasPrefix(strings.ToLower(rawURL), "data:") {
+		return nil
+	}
+	parsed, err := url.Parse(rawURL)
+	if err != nil || strings.TrimSpace(parsed.Path) == "" {
+		return fmt.Errorf("input video must have the .mp4 extension")
+	}
+	if !strings.HasSuffix(strings.ToLower(parsed.Path), ".mp4") {
+		return fmt.Errorf("input video must have the .mp4 extension")
+	}
+	return nil
+}
+
+func validateNativeVideoEditExtensionParams(body []byte, path string) error {
+	if path != NativeVideoEditsPath && path != NativeVideoExtensionsPath {
+		return nil
+	}
+	action := "video editing"
+	if path == NativeVideoExtensionsPath {
+		action = "video extension"
+	}
+	for _, field := range []string{"aspect_ratio", "resolution"} {
+		if !gjson.GetBytes(body, field).Exists() {
+			continue
+		}
+		return fmt.Errorf("%s is not supported for %s; output matches the input video (capped at 720p)", field, action)
 	}
 	return nil
 }
