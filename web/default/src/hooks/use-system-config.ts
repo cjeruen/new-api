@@ -47,6 +47,7 @@ interface StatusApiResponse {
     usd_exchange_rate?: number
     custom_currency_symbol?: string
     custom_currency_exchange_rate?: number
+    theme_homepage?: string
   }
 }
 
@@ -99,6 +100,7 @@ export function mapStatusDataToConfig(
     demoSiteEnabled: data.demo_site_enabled,
     displayTokenStatEnabled: data.display_token_stat_enabled,
     currency,
+    homeTheme: data.theme_homepage || 'default',
   }
 }
 

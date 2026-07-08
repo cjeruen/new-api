@@ -19,9 +19,11 @@ For commercial licensing, please contact support@quantumnous.com
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import z from 'zod'
 
+import { AijiniuModelSquare } from '@/features/home/themes/aijiniu/model-square'
 import { Pricing } from '@/features/pricing'
 import { getFreshModuleAccess } from '@/lib/nav-modules'
 import { useAuthStore } from '@/stores/auth-store'
+import { useSystemConfigStore } from '@/stores/system-config-store'
 
 const pricingSearchSchema = z.object({
   search: z.string().optional(),
@@ -36,14 +38,26 @@ const pricingSearchSchema = z.object({
   rechargePrice: z.boolean().optional(),
 })
 
+function PricingRouteComponent() {
+  const homeTheme = useSystemConfigStore((state) => state.config.homeTheme)
+  if (homeTheme === 'aijiniu') {
+    return <AijiniuModelSquare />
+  }
+  return <Pricing />
+}
+
 export const Route = createFileRoute('/pricing/')({
   validateSearch: pricingSearchSchema,
   beforeLoad: async ({ location }) => {
+    const { config } = useSystemConfigStore.getState()
+    const isAijiniu = config?.homeTheme === 'aijiniu'
+
     const access = await getFreshModuleAccess('pricing')
     if (!access.enabled) {
       throw redirect({ to: '/' })
     }
-    if (access.requireAuth) {
+    // Only enforce mandatory login if not using the public-facing Aijiniu model plaza
+    if (!isAijiniu && access.requireAuth) {
       const { auth } = useAuthStore.getState()
       if (!auth.user) {
         throw redirect({
@@ -53,5 +67,5 @@ export const Route = createFileRoute('/pricing/')({
       }
     }
   },
-  component: Pricing,
+  component: PricingRouteComponent,
 })

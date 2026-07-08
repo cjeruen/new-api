@@ -45,6 +45,7 @@ export interface SystemConfig {
   demoSiteEnabled?: boolean
   displayTokenStatEnabled?: boolean
   currency: CurrencyConfig
+  homeTheme: string
 }
 
 export const DEFAULT_CURRENCY_CONFIG: CurrencyConfig = {
@@ -76,6 +77,7 @@ export const useSystemConfigStore = create<SystemConfigState>()(
         systemName: DEFAULT_SYSTEM_NAME,
         logo: DEFAULT_LOGO,
         currency: { ...DEFAULT_CURRENCY_CONFIG },
+        homeTheme: 'default',
       },
       loading: true,
       loadedLogoUrl: DEFAULT_LOGO,

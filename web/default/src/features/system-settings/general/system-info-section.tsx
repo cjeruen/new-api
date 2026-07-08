@@ -40,6 +40,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { HOME_THEMES } from '@/features/home/themes/registry'
 
 import { FormDirtyIndicator } from '../components/form-dirty-indicator'
 import { FormNavigationGuard } from '../components/form-navigation-guard'
@@ -56,6 +57,7 @@ import { useUpdateOption } from '../hooks/use-update-option'
 const _systemInfoSchema = z.object({
   theme: z.object({
     frontend: z.enum(['default', 'classic']),
+    homepage: z.string().min(1),
   }),
   SystemName: z.string().min(1),
   ServerAddress: z.string().optional(),
@@ -88,6 +90,7 @@ export function SystemInfoSection({ defaultValues }: SystemInfoSectionProps) {
     theme: {
       frontend:
         defaultValues.theme?.frontend === 'classic' ? 'classic' : 'default',
+      homepage: normalizeValue(defaultValues.theme?.homepage) || 'default',
     },
     SystemName: normalizeValue(defaultValues.SystemName),
     ServerAddress: normalizeValue(defaultValues.ServerAddress),
@@ -104,6 +107,9 @@ export function SystemInfoSection({ defaultValues }: SystemInfoSectionProps) {
   const systemInfoSchemaWithI18n = z.object({
     theme: z.object({
       frontend: z.enum(['default', 'classic']),
+      homepage: z.string().min(1, {
+        error: () => t('Homepage theme is required'),
+      }),
     }),
     SystemName: z.string().min(1, {
       error: () => t('System name is required'),
@@ -228,6 +234,45 @@ export function SystemInfoSection({ defaultValues }: SystemInfoSectionProps) {
                     <FormDescription>
                       {t(
                         'Switch between the new frontend and the classic frontend. Changes take effect after page reload.'
+                      )}
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name='theme.homepage'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('Homepage Theme')}</FormLabel>
+                    <Select
+                      items={HOME_THEMES.map((theme) => ({
+                        value: theme.value,
+                        label: t(theme.labelKey),
+                      }))}
+                      onValueChange={field.onChange}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className='w-full'>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent alignItemWithTrigger={false}>
+                        <SelectGroup>
+                          {HOME_THEMES.map((theme) => (
+                            <SelectItem key={theme.value} value={theme.value}>
+                              {t(theme.labelKey)}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      {t(
+                        'Choose the theme for the home page. Different themes offer unique visual layouts for the landing page.'
                       )}
                     </FormDescription>
                     <FormMessage />

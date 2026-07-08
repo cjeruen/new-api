@@ -223,6 +223,14 @@ func UpdateOption(c *gin.Context) {
 			})
 			return
 		}
+	case "theme.homepage":
+		if option.Value == "" {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": "主页主题不能为空",
+			})
+			return
+		}
 	case "GroupRatio":
 		err = ratio_setting.CheckGroupRatio(option.Value.(string))
 		if err != nil {

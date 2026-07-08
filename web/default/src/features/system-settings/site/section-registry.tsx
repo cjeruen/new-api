@@ -38,6 +38,7 @@ const SITE_SECTIONS = [
         defaultValues={{
           theme: {
             frontend: settings['theme.frontend'] as 'default' | 'classic',
+            homepage: settings['theme.homepage'] || 'default',
           },
           SystemName: settings.SystemName,
           Logo: settings.Logo,

@@ -1,0 +1,542 @@
+/*
+Copyright (C) 2023-2026 QuantumNous
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+For commercial licensing, please contact support@quantumnous.com
+*/
+
+/* =============== 页头 =============== */
+.mp-hero {
+    padding: 70px 0 8px;
+    text-align: center;
+}
+
+.eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 15px;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: var(--violet);
+    border: 1px solid rgba(232, 165, 0, 0.28);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.85);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+}
+
+.eyebrow .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--violet);
+}
+
+.page-title {
+    font-family: var(--font-display);
+    font-size: clamp(30px, 4.4vw, 52px);
+    font-weight: 800;
+    line-height: 1.12;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin-bottom: 16px;
+}
+
+.page-title .grad {
+    background: linear-gradient(120deg, #c98a00, #f5b301, #b47a00);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.page-sub {
+    color: var(--muted);
+    font-size: clamp(15px, 1.4vw, 17.5px);
+    max-width: 620px;
+    margin: 0 auto;
+    line-height: 1.8;
+}
+
+.mp-stats {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-top: 30px;
+    flex-wrap: wrap;
+}
+
+.mp-stat {
+    text-align: center;
+}
+
+.mp-stat b {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 30px;
+    font-weight: 800;
+    background: linear-gradient(120deg, #b47a00, #e0a100);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.mp-stat span {
+    font-size: 13px;
+    color: var(--muted);
+}
+
+/* =============== 工具条：搜索 + 筛选 =============== */
+.mp-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin: 48px 0 28px;
+    flex-wrap: wrap;
+}
+
+.mp-toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 0 0 auto;
+}
+
+.mp-currency button {
+    min-width: 32px;
+    font-weight: 600;
+}
+
+.mp-search {
+    position: relative;
+    flex: 0 0 320px;
+    max-width: 100%;
+}
+
+.mp-search svg {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    stroke: var(--faint);
+    fill: none;
+    stroke-width: 1.9;
+    pointer-events: none;
+}
+
+.mp-search input {
+    width: 100%;
+    height: 48px;
+    padding: 0 16px 0 44px;
+    border-radius: 999px;
+    border: 1px solid var(--line-strong);
+    background: #fff;
+    font-size: 15px;
+    font-family: var(--font-body);
+    color: var(--ink);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.mp-search input::placeholder {
+    color: var(--faint);
+}
+
+.mp-search input:focus {
+    outline: none;
+    border-color: var(--violet);
+    box-shadow: 0 0 0 4px rgba(245, 179, 1, 0.14);
+}
+
+.mp-chips {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.mp-chip {
+    padding: 9px 18px;
+    border-radius: 999px;
+    border: 1px solid var(--line-strong);
+    background: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    transition: color 0.2s, background 0.2s, border-color 0.2s, transform 0.2s;
+    white-space: nowrap;
+}
+
+.mp-chip:hover {
+    color: var(--ink);
+    border-color: rgba(232, 165, 0, 0.4);
+    transform: translateY(-1px);
+}
+
+.mp-chip.active {
+    background: var(--grad);
+    color: #17150f;
+    border-color: transparent;
+    box-shadow: 0 8px 20px -8px rgba(232, 165, 0, 0.6);
+}
+
+/* =============== 模型卡网格 =============== */
+.mp-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    padding-bottom: 24px;
+}
+
+.mp-card {
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.mp-card::after {
+    content: '';
+    position: absolute;
+    top: -80px;
+    right: -80px;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 200, 70, 0.16), transparent 66%);
+    opacity: 0;
+    transition: opacity 0.4s;
+}
+
+.mp-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-lg);
+    border-color: rgba(232, 165, 0, 0.3);
+}
+
+.mp-card:hover::after {
+    opacity: 1;
+}
+
+.mp-top {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 14px;
+}
+
+.mp-logo {
+    width: 50px;
+    height: 50px;
+    flex-shrink: 0;
+    border-radius: 14px;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s;
+}
+
+.mp-card:hover .mp-logo {
+    transform: scale(1.06);
+}
+
+.mp-logo svg,
+.mp-logo img {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+}
+
+.mp-logo-fallback {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 19px;
+    line-height: 1;
+    background: linear-gradient(120deg, #c98a00, #f5b301);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.mp-id {
+    min-width: 0;
+}
+
+.mp-id h3 {
+    font-family: var(--font-display);
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: 0.01em;
+    word-break: break-word;
+}
+
+.mp-vendor {
+    font-size: 12.5px;
+    color: var(--faint);
+    margin-top: 2px;
+}
+
+.mp-desc {
+    color: var(--muted);
+    font-size: 13.5px;
+    line-height: 1.7;
+    margin-bottom: 14px;
+    flex: 1;
+}
+
+.mp-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-bottom: 4px;
+}
+
+.mp-tag {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--violet);
+    padding: 4px 10px;
+    border-radius: 7px;
+    background: rgba(232, 165, 0, 0.09);
+    border: 1px solid rgba(232, 165, 0, 0.22);
+}
+
+.mp-price {
+    display: flex;
+    gap: 12px;
+    margin: 16px 0;
+    padding-top: 16px;
+    border-top: 1px dashed var(--line-strong);
+}
+
+.pr {
+    flex: 1;
+}
+
+.pr-k {
+    display: block;
+    font-size: 12px;
+    color: var(--faint);
+    margin-bottom: 3px;
+}
+
+.pr-v {
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 800;
+    color: var(--ink);
+}
+
+.pr-v i {
+    font-style: normal;
+    font-weight: 500;
+    font-size: 11px;
+    color: var(--faint);
+    margin-left: 2px;
+}
+
+.mp-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 44px;
+    border-radius: 999px;
+    background: var(--grad);
+    color: #17150f;
+    font-weight: 700;
+    font-size: 14.5px;
+    box-shadow: 0 10px 24px -12px rgba(232, 165, 0, 0.7);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.mp-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 30px -12px rgba(232, 165, 0, 0.8);
+}
+
+.mp-btn .arrow {
+    transition: transform 0.2s;
+}
+
+.mp-btn:hover .arrow {
+    transform: translateX(3px);
+}
+
+.mp-empty {
+    display: none;
+    text-align: center;
+    padding: 60px 0;
+    color: var(--muted);
+    font-size: 15px;
+}
+
+.mp-empty.show {
+    display: block;
+}
+
+.mp-note {
+    max-width: 1200px;
+    margin: 8px auto 0;
+    padding: 0 40px 70px;
+    text-align: center;
+    color: var(--faint);
+    font-size: 12.5px;
+}
+
+@keyframes mp-enter {
+    from {
+        opacity: 0;
+        transform: translateY(18px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.mp-hero .eyebrow,
+.mp-hero .page-sub,
+.mp-hero .mp-stats,
+.mp-toolbar {
+    opacity: 0;
+    animation: mp-enter 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.mp-hero .eyebrow {
+    animation-delay: 0.06s;
+}
+
+.mp-hero .page-sub {
+    animation-delay: 0.30s;
+}
+
+.mp-hero .mp-stats {
+    animation-delay: 0.42s;
+}
+
+.mp-toolbar {
+    animation-delay: 0.54s;
+}
+
+/* 标题：两侧文字从左右进入，中间的「·」单独弹入作分隔 */
+@keyframes pt-from-left {
+    from {
+        opacity: 0;
+        transform: translateX(-46px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes pt-from-right {
+    from {
+        opacity: 0;
+        transform: translateX(46px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes pt-dot-pop {
+    0% {
+        opacity: 0;
+        transform: scale(0.2);
+    }
+
+    60% {
+        opacity: 1;
+        transform: scale(1.35);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.page-title .pt-left,
+.page-title .pt-right,
+.page-title .pt-dot {
+    display: inline-block;
+    opacity: 0;
+}
+
+.page-title .pt-left {
+    animation: pt-from-left 0.72s cubic-bezier(0.22, 1, 0.36, 1) 0.18s both;
+}
+
+.page-title .pt-right {
+    animation: pt-from-right 0.72s cubic-bezier(0.22, 1, 0.36, 1) 0.18s both;
+}
+
+.page-title .pt-dot {
+    margin: 0 0.34em;
+    color: var(--violet);
+    font-weight: 700;
+    animation: pt-dot-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 0.52s both;
+}
+
+@media (max-width: 1024px) {
+    .mp-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 860px) {
+    .mp-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .mp-toolbar-left {
+        width: 100%;
+    }
+
+    .mp-search {
+        flex: 1 1 auto;
+    }
+
+    .mp-chips {
+        overflow-x: auto;
+        padding-bottom: 4px;
+    }
+}
+
+@media (max-width: 560px) {
+    .mp-grid {
+        grid-template-columns: 1fr;
+    }
+}
